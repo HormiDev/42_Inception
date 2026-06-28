@@ -1,0 +1,76 @@
+services:
+  nginx:
+    build:
+      context: ./requirements/nginx
+    image: inception-nginx
+    container_name: nginx
+    ports:
+      - "443:443"
+    volumes:
+      - wordpress_data:/usr/share/nginx/html
+    depends_on:
+      - wordpress
+    networks:
+      - inception
+    restart: on-failure
+
+  wordpress:
+    build:
+      context: ./requirements/wordpress
+    image: inception-wordpress
+    container_name: wordpress
+    environment:
+      # Compose lee estos valores desde srcs/.env.
+      WORDPRESS_DB_HOST: mariadb
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    expose:
+      - "9000"
+    volumes:
+      - wordpress_data:/var/www/html
+    depends_on:
+      - mariadb
+    networks:
+      - inception
+    restart: on-failure
+
+  mariadb:
+    build:
+      context: ./requirements/mariadb
+    image: inception-mariadb
+    container_name: mariadb
+    environment:
+      # MariaDB crea la base y el usuario definidos en srcs/.env.
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    expose:
+      - "3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - inception
+    restart: on-failure
+
+volumes:
+  wordpress_data:
+    name: wordpress_data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/ide-dieg/data/wordpress
+  mariadb_data:
+    name: mariadb_data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/ide-dieg/data/mariadb
+
+networks:
+  inception:
+    name: inception
+    driver: bridge
