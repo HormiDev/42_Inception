@@ -224,7 +224,7 @@ la imagen. Es una forma habitual de mantener imágenes más pequeñas.
 
 El contenedor MariaDB queda preparado para WordPress en el primer arranque.
 
-Docker Compose le pasa variables desde:
+Docker Compose le pasa la configuración no sensible desde:
 
 ```text
 srcs/.env
@@ -235,8 +235,14 @@ El archivo contiene los datos que comparten MariaDB y WordPress:
 ```env
 MYSQL_DATABASE=wordpress
 MYSQL_USER=wp_user
-MYSQL_PASSWORD=wordpress_password
-MYSQL_ROOT_PASSWORD=mariadb_root_password
+WORDPRESS_URL=https://ide-dieg.42.fr
+```
+
+Las contraseñas se leen desde Docker secrets:
+
+```text
+secrets/db_password.txt
+secrets/db_root_password.txt
 ```
 
 El entrypoint de MariaDB hace esto:

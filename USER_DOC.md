@@ -33,14 +33,23 @@ flowchart LR
 
 ## Credenciales y datos
 
-Las credenciales que comparten WordPress y MariaDB están en:
+La configuración no sensible está en:
 
 ```text
 srcs/.env
 ```
 
-MariaDB usa esas variables para crear la base `wordpress` y el usuario `wp_user`.
-WordPress usa esos mismos datos para generar `/var/www/html/wp-config.php`.
+Las contraseñas y credenciales privadas están en:
+
+```text
+secrets/db_password.txt
+secrets/db_root_password.txt
+secrets/credentials.txt
+```
+
+MariaDB usa `db_password.txt` y `db_root_password.txt` para crear la base
+`wordpress` y el usuario `wp_user`. WordPress usa `credentials.txt` para
+instalar el sitio y crear sus usuarios por defecto.
 
 Los archivos del sitio se guardan en el volumen `wordpress_data`. La base de
 datos real se guarda en el volumen `mariadb_data`.
@@ -49,4 +58,5 @@ datos real se guarda en el volumen `mariadb_data`.
 
 - [Nginx](docs/nginx.md)
 - [MariaDB](docs/mariadb.md)
+- [Secrets](docs/secrets.md)
 - [Docker Compose](docs/docker-compose.md)

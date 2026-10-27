@@ -81,7 +81,7 @@ FROM alpine:3.20
 Instala las piezas mínimas:
 
 ```dockerfile
-RUN apk add --no-cache ca-certificates curl tar php83 php83-fpm php83-mysqli
+RUN apk add --no-cache ca-certificates curl tar php83 php83-fpm php83-mysqli php83-phar php83-mbstring php83-openssl
 ```
 
 Cada paquete tiene un papel:
@@ -92,6 +92,7 @@ Cada paquete tiene un papel:
 - `php83`: permite ejecutar pequeñas comprobaciones PHP desde el entrypoint.
 - `php83-fpm`: ejecuta el código PHP.
 - `php83-mysqli`: permite que WordPress se conecte a MariaDB.
+- `php83-phar`, `php83-mbstring` y `php83-openssl`: permiten ejecutar `wp-cli`.
 
 Después descarga WordPress desde su archivo oficial:
 
@@ -172,7 +173,7 @@ fastcgi_param SCRIPT_FILENAME /var/www/html$fastcgi_script_name;
 WordPress necesita una base de datos para funcionar de verdad. En este proyecto,
 esa base de datos vive en el contenedor `mariadb`.
 
-El nombre de la base, el usuario y las contraseñas se definen en:
+El nombre de la base y el usuario de MariaDB se definen en:
 
 ```text
 srcs/.env
@@ -182,11 +183,18 @@ Las variables importantes para WordPress son:
 
 - `MYSQL_DATABASE`: nombre de la base de datos de WordPress.
 - `MYSQL_USER`: usuario que WordPress usará para entrar en MariaDB.
-- `MYSQL_PASSWORD`: contraseña de ese usuario.
+- `WORDPRESS_URL`: URL final del sitio.
 
-Además, `docker-compose.yml` añade `WORDPRESS_DB_HOST=mariadb`. Ese valor le dice
-a WordPress que debe buscar la base de datos usando el nombre del servicio
-`mariadb` dentro de la red Docker.
+Las contraseñas y credenciales sensibles se leen desde Docker secrets:
+
+```text
+secrets/db_password.txt
+secrets/credentials.txt
+```
+
+Además, `docker-compose.yml` añade `WORDPRESS_DB_HOST=mariadb` y
+`MYSQL_PASSWORD_FILE=/run/secrets/db_password`. Esos valores le dicen a WordPress
+dónde está MariaDB y dónde leer la contraseña.
 
 WordPress no lee directamente `srcs/.env`. Docker Compose pasa esas variables al
 contenedor y el entrypoint genera este archivo:
@@ -206,7 +214,9 @@ El resumen es:
 1. MariaDB crea una base llamada `wordpress`.
 2. MariaDB crea un usuario llamado `wp_user`.
 3. WordPress escribe `wp-config.php` con esos mismos datos.
-4. WordPress espera a que MariaDB responda antes de arrancar `php-fpm83`.
+4. WordPress espera a que MariaDB responda.
+5. `wp-cli` instala WordPress con los datos de `secrets/credentials.txt`.
+6. WordPress arranca `php-fpm83`.
 
 ## Flujo de una primera visita
 
@@ -238,16 +248,18 @@ El servicio WordPress ya tiene las piezas básicas:
 - Descarga WordPress durante la construcción de la imagen.
 - Copia WordPress al volumen si el volumen está vacío.
 - Genera `wp-config.php` si todavía no existe.
-- Usa las variables de `srcs/.env` para conectar con MariaDB.
+- Usa `srcs/.env` y `secrets/db_password.txt` para conectar con MariaDB.
+- Instala WordPress automáticamente con `wp-cli` si todavía no está instalado.
+- Crea el usuario administrador y el segundo usuario definidos en
+  `secrets/credentials.txt`.
 - Espera a que MariaDB acepte conexiones antes de arrancar PHP-FPM.
 - Arranca `php-fpm83` en primer plano.
 - Escucha en el puerto interno `9000`.
 - Tiene `php83-mysqli` para poder hablar con MariaDB.
 
-Cuando entras por primera vez a `https://ide-dieg.42.fr`, WordPress ya tiene los
-archivos y la conexión a la base de datos preparados. Desde ahí puede crear sus
-tablas internas, como `wp_posts`, `wp_users` o `wp_options`, durante la
-instalación inicial del sitio.
+Cuando entras por primera vez a `https://ide-dieg.42.fr`, WordPress ya debería
+estar instalado. Las tablas internas, como `wp_posts`, `wp_users` o
+`wp_options`, las crea `wp-cli` durante el primer arranque.
 
 ## Comandos útiles
 
@@ -269,6 +281,12 @@ Comprobar que WordPress se copia al directorio web:
 docker run --rm inception-wordpress sh -c "test -f /var/www/html/wp-settings.php"
 ```
 
+Comprobar que `wp-cli` existe dentro de la imagen:
+
+```sh
+docker run --rm inception-wordpress wp --info --allow-root
+```
+
 ## Errores comunes
 
 Si Nginx muestra `502 Bad Gateway`, normalmente significa que no puede conectar
@@ -278,5 +296,9 @@ Si aparece `File not found`, puede que Nginx esté enviando a PHP-FPM una ruta q
 no existe dentro del contenedor WordPress.
 
 Si WordPress muestra un error de conexión a la base de datos, revisa que
-MariaDB haya arrancado, que `srcs/.env` tenga los mismos datos para ambos
-contenedores y que exista `/var/www/html/wp-config.php` dentro del volumen.
+MariaDB haya arrancado, que `secrets/db_password.txt` coincida con la contraseña
+de MariaDB y que exista `/var/www/html/wp-config.php` dentro del volumen.
+
+Si WordPress te manda a `/wp-admin/install.php`, puede que la base ya estuviera
+vacía antes de añadir `wp-cli`, que `secrets/credentials.txt` esté incompleto o
+que el contenedor WordPress no se haya recreado con la imagen nueva.

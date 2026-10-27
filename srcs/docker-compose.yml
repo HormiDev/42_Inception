@@ -22,9 +22,14 @@ services:
     environment:
       # Compose lee estos valores desde srcs/.env.
       WORDPRESS_DB_HOST: mariadb
+      WORDPRESS_URL: ${WORDPRESS_URL}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+      WP_CREDENTIALS_FILE: /run/secrets/credentials
+    secrets:
+      - db_password
+      - credentials
     expose:
       - "9000"
     volumes:
@@ -44,8 +49,11 @@ services:
       # MariaDB crea la base y el usuario definidos en srcs/.env.
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+    secrets:
+      - db_password
+      - db_root_password
     expose:
       - "3306"
     volumes:
@@ -74,3 +82,11 @@ networks:
   inception:
     name: inception
     driver: bridge
+
+secrets:
+  db_password:
+    file: ../secrets/db_password.txt
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  credentials:
+    file: ../secrets/credentials.txt

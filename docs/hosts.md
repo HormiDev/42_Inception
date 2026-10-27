@@ -101,11 +101,14 @@ Comprobar HTTPS con el certificado autofirmado:
 curl -k -I https://ide-dieg.42.fr
 ```
 
-Si WordPress todavía no está instalado, lo normal es ver una respuesta `302` hacia:
+Con la instalación automática activa, lo normal es ver una respuesta `200 OK`.
+Si ves una respuesta `302` hacia:
 
 ```text
 https://ide-dieg.42.fr/wp-admin/install.php
 ```
+
+significa que WordPress todavía no se ha instalado en la base de datos.
 
 ## Errores comunes
 

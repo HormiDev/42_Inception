@@ -59,6 +59,7 @@ Documentación técnica del proyecto:
 - [/etc/hosts](docs/hosts.md): qué línea añadir para que `ide-dieg.42.fr` apunte al Nginx local.
 - [Alpine Linux](docs/alpine.md): por qué se usa como base de los contenedores y cómo funciona `apk`.
 - [MariaDB](docs/mariadb.md): qué es, cómo guarda los datos de WordPress y cómo se inicializa la base del sitio.
+- [Secrets](docs/secrets.md): cómo guardar contraseñas fuera de las imágenes y cargarlas en los contenedores.
 - [Docker](docs/docker.md): guía general sobre instalación, uso básico y conceptos como contenedores, imágenes, Compose, volúmenes y redes.
 - [Documentación para desarrolladores](DEV_DOC.md): vista técnica del flujo de trabajo y enlaces útiles.
 - [Documentación de usuario](USER_DOC.md): explicación simple de la pila desde el punto de vista de uso.

@@ -32,13 +32,15 @@ flowchart LR
 
 ## Inicialización de datos
 
-`srcs/.env` define `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD` y
-`MYSQL_ROOT_PASSWORD`.
+`srcs/.env` define valores no sensibles como `MYSQL_DATABASE`, `MYSQL_USER` y
+`WORDPRESS_URL`. Las contraseñas viven en `secrets/db_password.txt`,
+`secrets/db_root_password.txt` y `secrets/credentials.txt`.
 
 En el primer arranque, el entrypoint de MariaDB inicializa `/var/lib/mysql`, crea
 la base de WordPress y da permisos al usuario de WordPress. El entrypoint de
-WordPress copia los archivos al volumen, genera `wp-config.php` y espera a que
-MariaDB acepte conexiones antes de ejecutar PHP-FPM.
+WordPress copia los archivos al volumen, genera `wp-config.php`, espera a que
+MariaDB acepte conexiones, instala WordPress con `wp-cli` y después ejecuta
+PHP-FPM.
 
 ## Documentación relacionada
 
@@ -48,3 +50,4 @@ MariaDB acepte conexiones antes de ejecutar PHP-FPM.
 - [Redes Docker](docs/docker-redes.md)
 - [Nginx](docs/nginx.md)
 - [MariaDB](docs/mariadb.md)
+- [Secrets](docs/secrets.md)
